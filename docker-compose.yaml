@@ -1,0 +1,36 @@
+# Use postgres/example user/password credentials
+version: '3.9'
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 256mb
+    # or set shared memory limit when deploy via swarm stack
+    # networks: host
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/raf_emm/:/docker-entrypoint-initdb.d
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: emmuser
+      POSTGRES_PASSWORD: emmpwd
+      POSTGRES_DB: emm
+
+
+  emm-cli:
+    image: emm-cli:custom
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    container_name: emm-cli
+    links:
+      - db
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
