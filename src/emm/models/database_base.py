@@ -13,7 +13,7 @@ def _build_db_url(config: Config) -> str:
     "{config.emm_db_host}:{config.emm_db_port}/{config.emm_db}"
 
 
-engine = create_engine()(url=_build_db_url(config=config), future=True)
+engine = create_engine(url=_build_db_url(config=config), future=True)
 metadata = MetaData(bind=engine)
 mapper_registry = registry(metadata)
 

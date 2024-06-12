@@ -1,7 +1,7 @@
 import dataclasses
 from datetime import datetime
 
-from emm.models.database_base import emm_model
+from src.emm.models.database_base import emm_model
 
 
 @emm_model(table_name="emm_schema", schema="public")

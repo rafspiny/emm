@@ -4,18 +4,18 @@ from dotenv import load_dotenv
 
 
 class Config:
-    emm_db_host: str
-    emm_db_port: str
-    emm_db_user: str
-    emm_db_pwd: str
-    emm_db: str
+    emm_db_host: str | None
+    emm_db_port: str | None
+    emm_db_user: str | None
+    emm_db_pwd: str | None
+    emm_db: str | None
 
     def __init__(self) -> None:
-        # self.emm_db_host = "localhost"
-        # self.emm_db_port = "5432"
-        # self.emm_db_user = "emmuser"
-        # self.emm_db_pwd = "emmpwd"
-        # self.emm_db = "emm"
+        self.emm_db_host = None
+        self.emm_db_port = None
+        self.emm_db_user = None
+        self.emm_db_pwd = None
+        self.emm_db = None
         self._initialize_properties()
 
     def _initialize_properties(self):
