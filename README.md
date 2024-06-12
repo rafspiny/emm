@@ -1,17 +1,17 @@
 # Evaluator of Massive Misalignment
-EMM is a software to evaluate the perforamnce degradation in relationional databases. 
+EMM is a software to evaluate the performance degradation in relationional databases.
 
 ## The idea
 Afer the talk from [XXX]() at [FOSDEM24](), I was intrigued by the idea of having a tool to help a person to design a DB table with some optimization in mind.
 
 The idea is fairly simple. Given a DDL, the tool can create multiple schemas with different permutation of the order of the table's columns.
 
-At this stage, the tool can populate the table, across the permucation schemas, so that we can 
+At this stage, the tool can populate the table, across the permucation schemas, so that we can
 * analyze the improvements on the file system
 * run workloads and analyze the (likely) performance improvements
 
-## Recognition 
-The name is a tribute to an old friend of mine. Emmanuel Granatiello. He passed away too early. He has been a good person. Caring, empathetic, curious, rooted in his community, an hacker. He has been greatly missed. 
+## Recognition
+The name is a tribute to an old friend of mine. Emmanuel Granatiello. He passed away too early. He has been a good person. Caring, empathetic, curious, rooted in his community, an hacker. He has been greatly missed.
 This is a tiny gesture to remember a wonderful person, a friend that walked this rock and left too early.
 
 ## Notes
@@ -28,12 +28,12 @@ You can bring up the services with your usual command for docker compose. Here w
 docker compose up
 ```
 
-You can then interact with the cli by running 
+You can then interact with the cli by running
 ```
 docker exec emm-cli python emm.py <command> <arguments>
 ```
 
-You are free to use poetry and create a virtual environment to run the cli locally, or access the docker container trough your favourite tool. 
+You are free to use poetry and create a virtual environment to run the cli locally, or access the docker container trough your favourite tool.
 I prefer [lazydocker](https://github.com/jesseduffield/lazydocker), for instance.
 
 ### db service
