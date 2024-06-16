@@ -166,4 +166,4 @@ cython_debug/
 .vscode/
 
 # EMM
-./sql/projects/*
+sql/projects/**
