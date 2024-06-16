@@ -1,7 +1,20 @@
+import logging
+
 import click
 
 from src.emm.config.config import Config
-from src.emm.operations.schemas import load_schemas
+from src.emm.models.schema import Schema
+from src.emm.operations.schemas import (
+    delete_schema,
+    find_schema_by_name,
+    initialize_schema,
+    load_schemas,
+    populate_schema,
+)
+from src.emm.operations.validators import validate_sql_folder
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.NOTSET)
 
 
 @click.group()
@@ -17,7 +30,6 @@ def list_schemas() -> None:
     """
     List all the schemas present in the DB.
     """
-    print("SCHEMAS")
     for schema in load_schemas():
         click.echo(f"Found schema: {schema.name}")
 
@@ -31,25 +43,42 @@ def clean_schemas(dry_run: bool, keep_original: bool) -> None:
     """
     Remove all the schemas from the DB.
     """
-    load_schemas()
-    click.echo("Removed schema")
+    schemas: list[Schema] = load_schemas()
+    for schema in schemas:
+        click.echo(f"Going to remove schema {schema.name}. Dry run is {str(dry_run)}")
+        if not dry_run or (keep_original and not schema.is_permutation):
+            delete_schema(schema)
+            click.echo(f"Removed schema {schema.name}")
+
+    click.echo("Removed all schemas")
 
 
 @cli.command(name="init")
-# @click.option("--sql-path", default=None, help="SQL file path for initialization")
-def init_schema() -> None:
+@click.option(
+    "--sql-folder-path", default=None, help="SQL file path for initialization"
+)
+def init_schema(sql_folder_path: str) -> None:
     """
     Init the schema based on the file sql/init/*.sql
     """
+    if not validate_sql_folder(sql_folder_path):
+        raise Exception("Project folder not found or has invalid structure")
+
+    initialize_schema(sql_folder_path)
     click.echo("Schema initialized")
 
 
 @cli.command(name="populate")
-# @click.option("--sql-path", default=None, help="SQL file path to populate the table")
-def insert_into_schema() -> None:
+@click.option("--schema-name", default=None, help="Schema name to populate")
+@click.option("--only-original", default=False, help="Schema name to populate")
+def insert_into_schema(schema_name: str, only_original: bool) -> None:
     """
     Insert data from file sql/data/*.sql into the table
     """
+    schema: Schema | None = find_schema_by_name(schema_name)
+    if schema:
+        populate_schema(schema, only_original)
+
     click.echo("Schema populated")
 
 

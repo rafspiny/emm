@@ -1,15 +1,19 @@
-import dataclasses
 from datetime import datetime
 
-from src.emm.models.database_base import emm_model
+from sqlalchemy.orm import Mapped, mapped_column
+
+from src.emm.models.database_base import SQLBase
 
 
-@emm_model(table_name="emm_schema", schema="public")
-@dataclasses.dataclass(repr=False)
-class Schema:
-    id: int
-    name: str
-    is_populated: bool
-    is_permutation: bool
-    permutation_id: int
-    created: datetime
+class Schema(SQLBase):
+    __tablename__ = "emm_schema"
+    __table_args__ = {"schema": "public"}
+
+    id: Mapped[int] = mapped_column(init=False, primary_key=True)
+    name: Mapped[str]
+    is_populated: Mapped[bool]
+    is_permutation: Mapped[bool]
+    permutation_id: Mapped[int]
+    created: Mapped[datetime] = mapped_column(
+        insert_default=datetime.now(), default=None
+    )
