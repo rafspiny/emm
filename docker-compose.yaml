@@ -6,6 +6,7 @@ services:
   db:
     image: postgres
     restart: always
+    hostname: emm_psql_machine
     # set shared memory limit when using docker-compose
     shm_size: 256mb
     # or set shared memory limit when deploy via swarm stack
@@ -24,13 +25,22 @@ services:
   emm-cli:
     image: emm-cli:custom
     build:
-      context: ./docker
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./docker/Dockerfile
     container_name: emm-cli
     links:
       - db
     depends_on:
       - db
+    volumes:
+      # We use this volume to attach the code to run
+      - .:/home/emm
+    environment:
+      EMM_CONFIG: docker
+    # This allow the container to run the container like with -i and -t.
+    # Keeping STDIN open and attaching pseudo-tty
+    stdin_open: true
+    tty: true
 
 volumes:
   pgdata:
