@@ -14,6 +14,7 @@ class Schema(SQLBase):
     is_populated: Mapped[bool]
     is_permutation: Mapped[bool]
     permutation_id: Mapped[int]
+    # name_original_table: Mapped[str]
     created: Mapped[datetime] = mapped_column(
         insert_default=datetime.now(), default=None
     )

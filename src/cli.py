@@ -50,14 +50,43 @@ def clean_schemas(dry_run: bool, keep_original: bool) -> None:
             delete_schema(schema)
             click.echo(f"Removed schema {schema.name}")
 
-    click.echo("Removed all schemas")
+    if dry_run:
+        click.echo("No schema was removed. dry-run is True")
+    else:
+        click.echo("Removed all schemas")
 
 
 @cli.command(name="init")
 @click.option(
-    "--sql-folder-path", default=None, help="SQL file path for initialization"
+    "--sql-folder-path",
+    default=None,
+    help="SQL file path for initialization",
+    required=True,
 )
 def init_schema(sql_folder_path: str) -> None:
+    """
+    Init the schema based on the file sql/init/*.sql
+    """
+    if not validate_sql_folder(sql_folder_path):
+        raise Exception("Project folder not found or has invalid structure")
+
+    initialize_schema(sql_folder_path)
+    click.echo("Schema initialized")
+
+
+@cli.command(name="permutations")
+@click.option(
+    "--schema-name",
+    default=None,
+    required=True,
+    help="Name of the schema for which permutations have to be generated",
+)
+@click.option(
+    "--override-table-name",
+    default=None,
+    help="Name of the table to parse in order to generate the permutation",
+)
+def permutations(sql_folder_path: str, override_table_name: str | None) -> None:
     """
     Init the schema based on the file sql/init/*.sql
     """

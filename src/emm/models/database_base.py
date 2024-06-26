@@ -2,7 +2,13 @@ import logging
 from contextlib import contextmanager
 
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass, Session, registry
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    MappedAsDataclass,
+    registry,
+    scoped_session,
+    sessionmaker,
+)
 
 from src.emm.config.config import Config, config
 
@@ -21,10 +27,12 @@ def _build_db_url(config: Config) -> str:
 engine = create_engine(url=_build_db_url(config=config), future=True)
 metadata = MetaData()
 mapper_registry = registry()
+session_factory = sessionmaker(bind=engine, future=True)
+Session = scoped_session(session_factory)
 
 
-def get_db_session() -> Session:
-    session = Session(bind=engine, future=True)
+def get_db_session():
+    session = Session()
 
     return session
 
@@ -37,7 +45,7 @@ class SQLBase(MappedAsDataclass, DeclarativeBase):
     """
 
 
-# Nased on https://gist.github.com/naufalafif/bb2e238f9f80aa17a16ebd7023afb935
+# Based on https://gist.github.com/naufalafif/bb2e238f9f80aa17a16ebd7023afb935
 @contextmanager
 def context_session():
     """
@@ -48,9 +56,8 @@ def context_session():
     try:
         yield session
     except Exception as e:
-        log.exception("Error occoured in the DB session context manager")
+        log.exception("Error occurred in the DB session context manager")
         session.rollback()
         raise e
     finally:
         session.commit()
-        session.close()
