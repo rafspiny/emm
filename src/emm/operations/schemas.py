@@ -27,9 +27,9 @@ def initialize_schema(project_name: str):
 
     with context_session() as session:
         # Raise an error if such schema is already present
-        if session.scalar(
-            select(Schema).where(exists().where(Schema.name == project_name))
-        ):
+        if session.execute(
+            select(Schema).where(exists().where(Schema.name == "emm_schema"))
+        ).scalar():
             raise Exception(
                 f"Schema {project_name} already present. "
                 "Please use a different name or clean "
