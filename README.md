@@ -31,7 +31,7 @@ docker compose up
 We define a service based on the standard psql image with two volumes. One for the data and another for the initialization of the container for the first time.
 It also exposes a port to allow you to connect to it from any other interface (PGAdmin or so).
 
-You can also check what is in the DB by `docker exec emm-db psql -U emmuser emm`
+You can also check what is in the DB by `docker exec -it emm-db psql -U emmuser emm`
 
 ### CLI servie
 
@@ -116,7 +116,7 @@ Found schema: raf_emm
 Remove all projects from the DB. It removes:
 * The tables
 * All the permutations
-* The entry from the emm_schema
+* The entry from the emm_project
 
 Once you do that, there is no way back.
 There is a `dry-run` option

@@ -4,12 +4,13 @@ import click
 
 from src.emm.config.config import Config
 from src.emm.models.schema import Schema
+from src.emm.operations.permutations import generate_permutations_for_project
+from src.emm.operations.population import populate_schema
 from src.emm.operations.schemas import (
     delete_schema,
     find_schema_by_name,
     initialize_schema,
     load_schemas,
-    populate_schema,
 )
 from src.emm.operations.validators import validate_sql_folder
 
@@ -86,15 +87,15 @@ def init_schema(sql_folder_path: str) -> None:
     default=None,
     help="Name of the table to parse in order to generate the permutation",
 )
-def permutations(sql_folder_path: str, override_table_name: str | None) -> None:
+def permutations(schema_name: str, override_table_name: str | None) -> None:
     """
     Init the schema based on the file sql/init/*.sql
     """
-    if not validate_sql_folder(sql_folder_path):
+    if not validate_sql_folder(sql_folder_path=schema_name):
         raise Exception("Project folder not found or has invalid structure")
 
-    initialize_schema(sql_folder_path)
-    click.echo("Schema initialized")
+    generate_permutations_for_project(project_name=schema_name)
+    click.echo("Permutations generated")
 
 
 @cli.command(name="populate")
@@ -107,17 +108,9 @@ def insert_into_schema(schema_name: str, only_original: bool) -> None:
     schema: Schema | None = find_schema_by_name(schema_name)
     if schema:
         populate_schema(schema, only_original)
-
-    click.echo("Schema populated")
-
-
-@cli.command(name="perms")
-# @click.option("--sql-path", default=None, help="SQL file path to populate the table")
-def generate_permutation_schemas() -> None:
-    """
-    Generates permutations based on the table defined in your project
-    """
-    click.echo("Permutation schemas generated")
+        click.echo("Schema populated")
+    else:
+        click.echo(f"Schema {schema_name} not found")
 
 
 @cli.command(name="benchmark")

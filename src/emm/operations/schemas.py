@@ -1,7 +1,6 @@
-import os
-
 from sqlalchemy import exists, select, text
 
+from src.emm.engine.parser import read_ddl_for_project
 from src.emm.models.database_base import context_session
 from src.emm.models.schema import Schema
 
@@ -16,19 +15,12 @@ def initialize_schema(project_name: str):
     """
     This is called after validation, no need to double check that the file exists
     """
-    # FIXME Instead of just executing the sql file, parse it and create the entity
-
-    schema_file_path = os.path.join("sql", "projects", project_name, "schema.sql")
-    ddl: str
-
-    # Read the DDL from schema.sql
-    with open(schema_file_path, "r") as file:
-        ddl = file.read()
+    ddl = read_ddl_for_project(project_name=project_name)
 
     with context_session() as session:
         # Raise an error if such schema is already present
         if session.execute(
-            select(Schema).where(exists().where(Schema.name == "emm_schema"))
+            select(Schema).where(exists().where(Schema.name == project_name))
         ).scalar():
             raise Exception(
                 f"Schema {project_name} already present. "
@@ -45,13 +37,14 @@ def initialize_schema(project_name: str):
         # Execute the DDL
         session.execute(text(ddl))
 
+        session.execute(text("SET search_path TO public"))
+
         # Create the object
+        # FIXME Get the table name from DDL
         session.add(
             Schema(
                 name=project_name,
-                is_populated=False,
-                is_permutation=False,
-                permutation_id=None,
+                original_table_name="original",
             )
         )
 
@@ -70,18 +63,6 @@ def find_schema_by_name(schema_name: str) -> Schema | None:
     Loads a Schema based on the name. If not found, returns None.
     """
     with context_session() as session:
-        return session.scalars(select(Schema).where(Schema.name == schema_name))
-
-
-def populate_schema(schema: Schema, only_original: bool) -> None:
-    """
-    TODO Load the sql file with data and import it in the original table.
-    If only_original is False, populate the permutations too.
-    The first operation done is t truncate all the table. All the table,
-    according to only_original.
-
-    # FIXME We should parse the insert statements and change the order
-    before executing it.
-    # FIXME We should not need a file. We could generate the data on the fly.
-    """
-    pass
+        return session.scalars(
+            select(Schema).where(Schema.name == schema_name)
+        ).one_or_none()
