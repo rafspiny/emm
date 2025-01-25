@@ -33,7 +33,7 @@ class Permutation(SQLBase):
     name: Mapped[str]
     is_populated: Mapped[bool]
     is_permutation: Mapped[bool]
-    permutation_id: Mapped[int]
+    permutation_code: Mapped[str]
     schema_id: Mapped[int] = mapped_column(
         ForeignKey("public.emm_project.id", ondelete="CASCADE")
     )

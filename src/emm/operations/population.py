@@ -44,7 +44,7 @@ def populate_permutation(permutation_key: str, schema: Schema) -> None:
             session.query(Permutation)
             .filter(
                 Permutation.schema_id == schema.id,
-                Permutation.permutation_id == permutation_key,
+                Permutation.permutation_code == permutation_key,
             )
             .one()
         )

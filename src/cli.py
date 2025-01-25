@@ -4,6 +4,7 @@ import click
 
 from src.emm.config.config import Config
 from src.emm.models.schema import Schema
+from src.emm.operations.perfomances import benchmark_schema
 from src.emm.operations.permutations import generate_permutations_for_project
 from src.emm.operations.population import populate_schema
 from src.emm.operations.schemas import (
@@ -114,11 +115,17 @@ def insert_into_schema(schema_name: str, only_original: bool) -> None:
 
 
 @cli.command(name="benchmark")
-def benchmark_schemas() -> None:
+@click.option("--schema-name", default=None, help="Schema name to run benchmark on")
+def benchmark_schemas(schema_name: str) -> None:
     """
     Run benchmarks
     """
-    click.echo("Benchmark executed")
+    schema: Schema | None = find_schema_by_name(schema_name)
+    if schema:
+        benchmark_schema(schema)
+        click.echo(f"Schema {schema_name} benchmark finished.")
+    else:
+        click.echo(f"Schema {schema_name} not found")
 
 
 @cli.command(name="env")

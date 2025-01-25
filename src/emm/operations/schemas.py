@@ -1,6 +1,11 @@
 from sqlalchemy import exists, select, text
 
-from src.emm.engine.parser import read_ddl_for_project
+from src.emm.engine.data import DDLTableContext
+from src.emm.engine.parser import (
+    extract_create_statement,
+    parse_create_statement,
+    read_ddl_for_project,
+)
 from src.emm.models.database_base import context_session
 from src.emm.models.schema import Schema
 
@@ -16,6 +21,14 @@ def initialize_schema(project_name: str):
     This is called after validation, no need to double check that the file exists
     """
     ddl = read_ddl_for_project(project_name=project_name)
+
+    # Parse the DDL into a statement object
+    create_statement = extract_create_statement(ddl)
+
+    # Get the context, so that we can easily create permutations
+    context: DDLTableContext = parse_create_statement(
+        project_name=project_name, statement=create_statement
+    )
 
     with context_session() as session:
         # Raise an error if such schema is already present
@@ -40,11 +53,10 @@ def initialize_schema(project_name: str):
         session.execute(text("SET search_path TO public"))
 
         # Create the object
-        # FIXME Get the table name from DDL
         session.add(
             Schema(
                 name=project_name,
-                original_table_name="original",
+                original_table_name=context.table_name,
             )
         )
 

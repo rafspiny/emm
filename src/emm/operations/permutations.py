@@ -78,6 +78,10 @@ def _get_permutations_by_type(context: DDLTableContext) -> list[tuple[DDLTableCo
     # Generate permutations of columns based on type permutations
     column_permutations = []
     for type_permutation in type_permutations:
+        # skip neutral permutation
+        if list(type_permutation) == unique_types:
+            continue
+
         perm = []
         for column_type in type_permutation:
             perm.extend(columns_by_type[column_type])
@@ -92,7 +96,7 @@ def compute_permutations(
     """
     Build a mapping of shuffled indexes of the columns and their permutation.
     The permutation is expressed as the sorted list of columns.
-    TODO< I can just permute the indexes
+    TODO I can just permute the indexes
     """
     permutation_dict = {}
     original_indices = {item: index for index, item in enumerate(context.columns)}
@@ -146,11 +150,11 @@ def validate_no_permutations_exists_for_project(
     # Check for existing permutations and avoid re-generating them
     with context_session() as session:
         existing_permutations = {
-            p.permutation_id
+            p.permutation_code
             for p in session.query(Permutation)
             .filter(
                 Permutation.schema_id == schema.id,
-                Permutation.permutation_id.in_(
+                Permutation.permutation_code.in_(
                     permutations_settings.permutation_dict.keys()
                 ),
             )
@@ -158,6 +162,22 @@ def validate_no_permutations_exists_for_project(
         }
         if existing_permutations:
             raise ValueError("Permutations already exists. Use the clean command first")
+
+
+def save_baseline_permutation(schema: Schema) -> None:
+    # Write create statement
+    with context_session() as session:
+        # Create the object
+        session.add(
+            Permutation(
+                is_permutation=False,
+                is_populated=False,
+                schema_id=schema.id,
+                schema=schema,
+                permutation_code=-1,
+                name=schema.original_table_name,
+            )
+        )
 
 
 def save_permutation(
@@ -179,13 +199,17 @@ def save_permutation(
                 is_populated=False,
                 schema_id=schema.id,
                 schema=schema,
-                permutation_id=permutation_key,
+                permutation_code=permutation_key,
                 name=f"{schema.name}_{permutation_key}",
             )
         )
 
 
 def generate_permutations_for_project(project_name: str) -> None:
+    schema = find_schema_by_name(project_name)
+    if schema is None:
+        raise ValueError(f"Schema {project_name} not found")
+
     # Extract the DDL
     ddl = read_ddl_for_project(project_name=project_name)
 
@@ -205,6 +229,7 @@ def generate_permutations_for_project(project_name: str) -> None:
     # Should avoid re-generating existing permutations
     validate_no_permutations_exists_for_project(project_name, permutations_settings)
 
+    save_baseline_permutation(schema=schema)
     for permutation_key, permutation in permutations_settings.permutation_dict.items():
         # Generate DDL
         permutation_ddl: str = make_permutation_ddl(
@@ -212,8 +237,6 @@ def generate_permutations_for_project(project_name: str) -> None:
         )
 
         # Write them to the DB and to the permutation table
-        schema = find_schema_by_name(project_name)
-
         save_permutation(permutation_key=permutation_key, permutation_ddl=permutation_ddl, schema=schema)  # type: ignore
 
 
