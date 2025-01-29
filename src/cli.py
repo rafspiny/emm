@@ -1,10 +1,11 @@
 import logging
 
 import click
+from tabulate import tabulate
 
-from src.emm.config.config import Config
+from src.emm.engine.data import PermutationRequest
 from src.emm.models.schema import Schema
-from src.emm.operations.perfomances import benchmark_schema
+from src.emm.operations.perfomances import benchmark_schema, load_analysis_for_schema
 from src.emm.operations.permutations import generate_permutations_for_project
 from src.emm.operations.population import populate_schema
 from src.emm.operations.schemas import (
@@ -76,6 +77,19 @@ def init_schema(sql_folder_path: str) -> None:
     click.echo("Schema initialized")
 
 
+def get_permutation_request_from_argument(
+    permutation_logic: str | None,
+) -> PermutationRequest:
+    if permutation_logic is None:
+        return PermutationRequest.ALL
+
+    try:
+        return PermutationRequest(permutation_logic.lower())
+    except ValueError:
+        log.info(f"Value {permutation_logic} not valid. Defaults to all.")
+        return PermutationRequest.ALL
+
+
 @cli.command(name="permutations")
 @click.option(
     "--schema-name",
@@ -84,18 +98,22 @@ def init_schema(sql_folder_path: str) -> None:
     help="Name of the schema for which permutations have to be generated",
 )
 @click.option(
-    "--override-table-name",
+    "--permutation-logic",
     default=None,
-    help="Name of the table to parse in order to generate the permutation",
+    help="Type of permutation to compute. Possible options are: all, type. Defaults to all",
 )
-def permutations(schema_name: str, override_table_name: str | None) -> None:
+def permutations(schema_name: str, permutation_logic: str | None) -> None:
     """
     Init the schema based on the file sql/init/*.sql
     """
     if not validate_sql_folder(sql_folder_path=schema_name):
         raise Exception("Project folder not found or has invalid structure")
 
-    generate_permutations_for_project(project_name=schema_name)
+    permutation_request = get_permutation_request_from_argument(permutation_logic)
+
+    generate_permutations_for_project(
+        project_name=schema_name, permutation_request=permutation_request
+    )
     click.echo("Permutations generated")
 
 
@@ -128,13 +146,38 @@ def benchmark_schemas(schema_name: str) -> None:
         click.echo(f"Schema {schema_name} not found")
 
 
-@cli.command(name="env")
-def print_env() -> None:
+@cli.command(name="report")
+@click.option(
+    "--schema-name",
+    default=None,
+    help="Schema name for which the report(s) should be printed",
+)
+def print_schema_analysis(schema_name: str) -> None:
     """
-    Print env variables
+    Load the analysis for the specified schema and print them
     """
-    click.echo("Loading env")
+    click.echo("Loading schema analysis")
 
-    config = Config()
-    for key, value in config.__dict__.items():
-        print(f"conf {key}: {value}")
+    schema = find_schema_by_name(schema_name)
+    if schema is None:
+        click.echo(f"Schema {schema_name} not found")
+        return
+
+    for analysis in load_analysis_for_schema(schema):
+        click.echo(f"Analysis {analysis.name}")
+        # Prepare data for the Markdown table
+        table_data = [
+            [
+                report.metric,
+                report.best_permutation_name,
+                f"{report.improvement_percentage_over_baseline:.2f}%",
+                report.size_table,
+            ]
+            for report in analysis.reports
+        ]
+        headers = ["Metric", "Best Permutation", "Improvement (%)", "Size Table"]
+
+        # Print Markdown table using tabulate
+        markdown_table = tabulate(table_data, headers=headers, tablefmt="github")
+        click.echo(markdown_table)
+        click.echo("\n")

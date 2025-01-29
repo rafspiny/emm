@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from decimal import Decimal
 
-from sqlalchemy import text
+from sqlalchemy import select, text
 
 from src.emm.models.database_base import context_session
 from src.emm.models.performance import (
@@ -145,7 +145,7 @@ def check_permutations_sizes(schema: Schema) -> None:
                     (permutation_id, improvement_percentage)
                 )
 
-            # TODO Choose the best by storing first the permutation id and the improvement percentage.
+            # Choose the best by storing first the permutation id and the improvement percentage.
             # Later, sort them by improvement percentage descending and choose the best first element
             best_option = sorted(
                 computed_metric_by_permutation_id, key=lambda x: x[1], reverse=True
@@ -185,3 +185,9 @@ def benchmark_schema(schema: Schema):
     degradations in a standard app
     """
     check_permutations_sizes(schema)
+
+
+def load_analysis_for_schema(schema: Schema) -> list[Analysis]:
+    with context_session() as session:
+        stmt = select(Analysis).filter(Analysis.schema_id == schema.id)
+        return session.scalars(stmt)

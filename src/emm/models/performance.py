@@ -28,6 +28,13 @@ class Analysis(SQLBase):
     created: Mapped[datetime] = mapped_column(
         insert_default=datetime.now(), default=None
     )
+    # Define the relationship with cascade delete
+    reports: Mapped[list["AnalysisReport"]] = relationship(
+        "AnalysisReport",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+        default_factory=list,
+    )
 
 
 class AnalysisReport(SQLBase):
@@ -38,7 +45,7 @@ class AnalysisReport(SQLBase):
     analysis_id: Mapped[int] = mapped_column(
         ForeignKey("public.emm_analysis.id", ondelete="CASCADE")
     )
-    analysis: Mapped[Analysis] = relationship(Analysis)
+    analysis: Mapped[Analysis] = relationship(Analysis, back_populates="reports")
     metric: Mapped[str]
     best_permutation_name: Mapped[str]
     improvement_percentage_over_baseline: Mapped[Decimal]

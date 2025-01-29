@@ -205,7 +205,9 @@ def save_permutation(
         )
 
 
-def generate_permutations_for_project(project_name: str) -> None:
+def generate_permutations_for_project(
+    project_name: str, permutation_request: PermutationRequest
+) -> None:
     schema = find_schema_by_name(project_name)
     if schema is None:
         raise ValueError(f"Schema {project_name} not found")
@@ -223,7 +225,7 @@ def generate_permutations_for_project(project_name: str) -> None:
 
     # Generate the possible permutations
     permutations_settings: PermutationSettings = compute_permutations(
-        context, PermutationRequest.CLUSTER_BY_TYPE
+        context, permutation_request
     )
 
     # Should avoid re-generating existing permutations
