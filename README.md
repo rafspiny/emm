@@ -2,24 +2,25 @@
 EMM is a software to evaluate the performance degradation in relational databases.
 
 ## The idea
-After the talk from [Charly Batista](https://fosdem.org/2024/schedule/event/fosdem-2024-3601-reducing-costs-and-improving-performance-with-data-modeling-in-postgres/) at [FOSDEM24](https://fosdem.org/2024/), I was intrigued by the idea of having a tool to help a person to design a DB table with some optimization in mind.
+After the talk from [Charly Batista](https://fosdem.org/2024/schedule/event/fosdem-2024-3601-reducing-costs-and-improving-performance-with-data-modeling-in-postgres/) at [FOSDEM24](https://fosdem.org/2024/), I was intrigued by the idea of having a tool to help a person designing a DB table with some optimizations in mind.
 
-The idea is fairly simple. Given a DDL, the tool can create multiple schemas with different permutation of the order of the table's columns.
+The idea is fairly simple. Given a table DDL, the tool creates a schema for the table under scrutiny and then creates multiple tables with different permutations of the table's columns.
 
-At this stage, the tool can populate the table, across the permutation schemas, so that we can
+At this stage, the tool can populate the tables, across the permutation schemas, so that we can
 * analyze the improvements on the file system
 * run workloads and analyze the (likely) performance improvements
 
 ## Recognition
 The name is a tribute to an old friend of mine. Emmanuel Granatiello. He passed away too early. He has been an extraordinary person. Caring, empathetic, curious, rooted in his community, an hacker. He has been and is greatly missed.
+[Charly Batista](https://fosdem.org/2024/schedule/event/fosdem-2024-3601-reducing-costs-and-improving-performance-with-data-modeling-in-postgres/) for giving the talk.
 
 ## Notes
-The initial release encompasses PSQL only.
+The initial release encompasses PSQL only and it is written as I would be vibe coding. Whatever that means.
 
 ## How EMM works
 The `docker-compose` file defines two services:
-* db
-* emm-cli
+* `emm-db`
+* `emm-cli`
 
 You can bring up the services with your usual command for docker compose. Here we assume that you have a recent version, so `docker compose` instead of `docker-compose`.
 
@@ -128,3 +129,71 @@ No schema was removed. dry-run is True
 ✔ /data/projects/emm [main|✚ 3]
 
 ```
+
+##### permutations
+Generates permutations of the columns. It takes two parameters in input:
+* schema-name: the name of the schema you want to analyze
+* permutation-type
+  * all
+  * type
+
+```
+$ docker exec emm-cli poetry run python __main__.py permutations --schema-name raf_emm --permutation-logic type
+Permutations generated
+✔ /data/projects/emm [main|✚ 3]
+```
+
+##### populate
+Generates data to use to populate all the permutations tables that have been created with teh permutations command.
+It takes two parameters:
+* schema-name: Schema name to populate
+* only-original: If one wants to populate only the original table, not the permutations.
+
+```
+$ docker exec emm-cli poetry run python __main__.py populate --schema-name raf_emm
+DEBUG:src.emm.engine.parser:Loading DDL for project raf_emm at location sql/projects/raf_emm/data.sql
+Schema populated
+✔ /data/projects/emm [main|✚ 3]
+```
+
+##### benchmark
+It runs the benchmark on the original table and on all the permutations.
+It takes two parameters:
+* schema-name: Schema name to benchmark
+* benchmark-logic: 
+  * all
+  * size
+  * ro
+
+```
+$ docker exec emm-cli poetry run python __main__.py benchmark --schema-name raf_emm --benchmark-logic all
+INFO:src.cli:Value type not valid. Defaults to all.
+Schema raf_emm benchmark finished.
+✔ /data/projects/emm [main|✚ 3]
+```
+
+##### report
+It generates a report of the benchmark.
+It takes one parameter:
+* schema-name: Schema name to report
+
+```
+$ docker exec emm-cli poetry run python __main__.py report --schema-name raf_emm
+Loading schema analysis
+Analysis raf_emm_disk_analysis
+| Metric      | Best Permutation   | Improvement (%)   |   Size Table |
+|-------------|--------------------|-------------------|--------------|
+| total_bytes | raf_emm_0231       | 0.74%             |      1000000 |
+| index_bytes | raf_emm_2310       | 0.00%             |      1000000 |
+| toast_bytes | raf_emm_2310       | 0.00%             |      1000000 |
+| table_bytes | raf_emm_0231       | 0.91%             |      1000000 |
+
+✔ /data/projects/emm [main|✚ 3]
+```
+
+
+## TODO
+* [ ] Add flask tests for RO, RW and mix workload.
+* [ ] Add generator for data.sql
+* [ ] Maybe using pgbench instead
+* [ ] Consider rewriting it with go or rust
