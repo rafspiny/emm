@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS emm_analysis_report (
     metric TEXT NOT NULL,                                        -- For convenience, we keep the name as well
     best_permutation_name TEXT NOT NULL,                         -- The name of the best permutation
     improvement_percentage_over_baseline NUMERIC(4, 2) NOT NULL, -- Improvement percentage over the baseline
-    size_table INT NOT NULL,                                     -- Size of the table, for validation purposes
+    original_metric_value NUMERIC(10, 2) NOT NULL,                -- Size of the table, for validation purposes
+    permutation_metric_value NUMERIC(10, 2) NOT NULL,             -- Size of the table, for validation purposes
     created TIMESTAMP DEFAULT CURRENT_TIMESTAMP                  -- Timestamp column for creation time, defaults to current time
 );
 
@@ -50,7 +51,7 @@ CREATE TABLE IF NOT EXISTS emm_raw_performance (
 --    workload_id SERIAL references emm_workload(id) NULL             -- FK on schema
     metric TEXT,                                                      -- Metric name (row_estimate, index_bytes, toast_bytes, table_bytes, total_bytes, metric_value)
     notes TEXT,                                                       -- For convenience, we keep the name as well
-    value BIGINT,                                                     -- The value of the metric
+    value NUMERIC(20, 6),                                             -- The value of the metric
     created TIMESTAMP DEFAULT CURRENT_TIMESTAMP                       -- Timestamp column for creation time, defaults to current time
 );
 
