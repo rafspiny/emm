@@ -8,6 +8,7 @@ from src.emm.engine.parser import (
 )
 from src.emm.models.database_base import context_session
 from src.emm.models.schema import Schema
+from src.emm.operations.constants import PG_STAT_STATEMENTS
 
 
 def load_schemas() -> list[Schema]:

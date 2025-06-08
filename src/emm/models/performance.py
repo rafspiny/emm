@@ -49,7 +49,8 @@ class AnalysisReport(SQLBase):
     metric: Mapped[str]
     best_permutation_name: Mapped[str]
     improvement_percentage_over_baseline: Mapped[Decimal]
-    size_table: Mapped[int]
+    original_metric_value: Mapped[float]
+    permutation_metric_value: Mapped[float]
     created: Mapped[datetime] = mapped_column(
         insert_default=datetime.now(), default=None
     )
@@ -71,7 +72,7 @@ class RawPerformanceRecord(SQLBase):
     permutation: Mapped[Permutation] = relationship(Permutation, cascade="all")
     metric: Mapped[str]
     notes: Mapped[str]
-    value: Mapped[int]
+    value: Mapped[float]
     created: Mapped[datetime] = mapped_column(
         insert_default=datetime.now(), default=None
     )

@@ -3,7 +3,7 @@ import logging
 import click
 from tabulate import tabulate
 
-from src.emm.engine.data import PermutationRequest
+from src.emm.engine.data import BenchmarkRequest, PermutationRequest
 from src.emm.models.schema import Schema
 from src.emm.operations.perfomances import benchmark_schema, load_analysis_for_schema
 from src.emm.operations.permutations import generate_permutations_for_project
@@ -77,19 +77,6 @@ def init_schema(sql_folder_path: str) -> None:
     click.echo("Schema initialized")
 
 
-def get_permutation_request_from_argument(
-    permutation_logic: str | None,
-) -> PermutationRequest:
-    if permutation_logic is None:
-        return PermutationRequest.ALL
-
-    try:
-        return PermutationRequest(permutation_logic.lower())
-    except ValueError:
-        log.info(f"Value {permutation_logic} not valid. Defaults to all.")
-        return PermutationRequest.ALL
-
-
 @cli.command(name="permutations")
 @click.option(
     "--schema-name",
@@ -134,13 +121,20 @@ def insert_into_schema(schema_name: str, only_original: bool) -> None:
 
 @cli.command(name="benchmark")
 @click.option("--schema-name", default=None, help="Schema name to run benchmark on")
-def benchmark_schemas(schema_name: str) -> None:
+@click.option(
+    "--benchmark-logic",
+    default=None,
+    help="The kind of benchamrk to run. Possible options are: all, size. Defaults to all",
+)
+def benchmark_schemas(schema_name: str, benchmark_logic: str) -> None:
     """
     Run benchmarks
     """
     schema: Schema | None = find_schema_by_name(schema_name)
+    benchmark_request = get_benchmark_request_from_argument(benchmark_logic)
+
     if schema:
-        benchmark_schema(schema)
+        benchmark_schema(schema, benchmark_request)
         click.echo(f"Schema {schema_name} benchmark finished.")
     else:
         click.echo(f"Schema {schema_name} not found")
@@ -181,3 +175,29 @@ def print_schema_analysis(schema_name: str) -> None:
         markdown_table = tabulate(table_data, headers=headers, tablefmt="github")
         click.echo(markdown_table)
         click.echo("\n")
+
+
+def get_permutation_request_from_argument(
+    permutation_logic: str | None,
+) -> PermutationRequest:
+    if permutation_logic is None:
+        return PermutationRequest.ALL
+
+    try:
+        return PermutationRequest(permutation_logic.lower())
+    except ValueError:
+        log.info(f"Value {permutation_logic} not valid. Defaults to all.")
+        return PermutationRequest.ALL
+
+
+def get_benchmark_request_from_argument(
+    benchmark_logic: str | None,
+) -> BenchmarkRequest:
+    if benchmark_logic is None:
+        return BenchmarkRequest.ALL
+
+    try:
+        return BenchmarkRequest(benchmark_logic.lower())
+    except ValueError:
+        log.info(f"Value {benchmark_logic} not valid. Defaults to all.")
+        return BenchmarkRequest.ALL

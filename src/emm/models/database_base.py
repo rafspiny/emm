@@ -24,7 +24,7 @@ def _build_db_url(config: Config) -> str:
     return conn_str
 
 
-engine = create_engine(url=_build_db_url(config=config), future=True)
+engine = create_engine(url=_build_db_url(config=config), future=True, query_cache_size=0)
 metadata = MetaData()
 mapper_registry = registry()
 session_factory = sessionmaker(bind=engine, future=True)
