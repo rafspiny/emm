@@ -1,4 +1,5 @@
 import logging
+from functools import partial, wraps
 
 import click
 from tabulate import tabulate
@@ -18,6 +19,20 @@ from src.emm.operations.validators import validate_sql_folder
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.NOTSET)
+
+
+def catch_exception(func=None, *, handle):
+    if not func:
+        return partial(catch_exception, handle=handle)
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except handle as e:
+            raise click.ClickException(e)
+
+    return wrapper
 
 
 @click.group()
@@ -66,6 +81,7 @@ def clean_schemas(dry_run: bool, keep_original: bool) -> None:
     help="SQL file path for initialization",
     required=True,
 )
+@catch_exception(handle=Exception)
 def init_schema(sql_folder_path: str) -> None:
     """
     Init the schema based on the file sql/init/*.sql
@@ -89,6 +105,7 @@ def init_schema(sql_folder_path: str) -> None:
     default=None,
     help="Type of permutation to compute. Possible options are: all, type. Defaults to all",
 )
+@catch_exception(handle=Exception)
 def permutations(schema_name: str, permutation_logic: str | None) -> None:
     """
     Init the schema based on the file sql/init/*.sql
@@ -126,6 +143,7 @@ def insert_into_schema(schema_name: str, only_original: bool) -> None:
     default=None,
     help="The kind of benchamrk to run. Possible options are: all, size. Defaults to all",
 )
+@catch_exception(handle=Exception)
 def benchmark_schemas(schema_name: str, benchmark_logic: str) -> None:
     """
     Run benchmarks
@@ -165,14 +183,23 @@ def print_schema_analysis(schema_name: str) -> None:
                 report.metric,
                 report.best_permutation_name,
                 f"{report.improvement_percentage_over_baseline:.2f}%",
-                report.size_table,
+                report.original_metric_value,
+                report.permutation_metric_value,
             ]
             for report in analysis.reports
         ]
-        headers = ["Metric", "Best Permutation", "Improvement (%)", "Size Table"]
+        headers = [
+            "Metric",
+            "Best Permutation",
+            "Improvement (%)",
+            "Baseline value",
+            "Permutation value",
+        ]
 
         # Print Markdown table using tabulate
-        markdown_table = tabulate(table_data, headers=headers, tablefmt="github")
+        markdown_table = tabulate(
+            table_data, headers=headers, tablefmt="github", maxcolwidths=25
+        )
         click.echo(markdown_table)
         click.echo("\n")
 

@@ -15,7 +15,7 @@ repos:
     rev: 23.1.0
     hooks:
       - id: black
-        language_version: python3.11
+        language_version: python3.13
 
   - repo: https://github.com/pycqa/flake8
     rev: 7.0.0
@@ -48,3 +48,14 @@ repos:
     rev: v3.0.1
     hooks:
       - id: docker-compose-check
+
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.5.0
+    hooks:
+      - id: sqlfluff-lint
+        name: Linting SQL files
+        files: '\.sql$'
+        # For dbt projects, this installs the dbt "extras".
+        # You will need to select the relevant dbt adapter for your dialect
+        # (https://docs.getdbt.com/docs/available-adapters):
+        # additional_dependencies: ['<dbt-adapter>', 'sqlfluff-templater-dbt']

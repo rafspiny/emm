@@ -21,38 +21,37 @@ CREATE TABLE IF NOT EXISTS emm_permutation (
     is_permutation BOOLEAN,                         -- if the schema represents a permutation
     permutation_code TEXT,                          -- The permutation id if it is a permutation
     created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,    -- Timestamp column for creation time, defaults to current time
-    schema_id SERIAL references emm_project(id)     -- FK on schema
+    schema_id SERIAL REFERENCES emm_project (id)     -- FK on schema
 );
 
 CREATE TABLE IF NOT EXISTS emm_analysis (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,                             -- For convenience, we keep the name as well
     description TEXT,                               -- Description of the analysis
-    schema_id SERIAL references emm_project(id),    -- FK on schema
-    type emm_analysis_type NOT NULL,                -- Type of analysis: SIZE, PERFORMANCE_RO, PERFORMANCE_RW
+    schema_id SERIAL REFERENCES emm_project (id),    -- FK on schema
+    type EMM_ANALYSIS_TYPE NOT NULL,                -- Type of analysis: SIZE, PERFORMANCE_RO, PERFORMANCE_RW
     created TIMESTAMP DEFAULT CURRENT_TIMESTAMP     -- Timestamp column for creation time, defaults to current time
 );
 
 CREATE TABLE IF NOT EXISTS emm_analysis_report (
     id SERIAL PRIMARY KEY,
-    analysis_id SERIAL references emm_analysis(id) NOT NULL,     -- FK on schema
+    analysis_id SERIAL REFERENCES emm_analysis (id) NOT NULL,     -- FK on schema
     metric TEXT NOT NULL,                                        -- For convenience, we keep the name as well
     best_permutation_name TEXT NOT NULL,                         -- The name of the best permutation
     improvement_percentage_over_baseline NUMERIC(4, 2) NOT NULL, -- Improvement percentage over the baseline
-    original_metric_value NUMERIC(10, 2) NOT NULL,                -- Size of the table, for validation purposes
-    permutation_metric_value NUMERIC(10, 2) NOT NULL,             -- Size of the table, for validation purposes
+    original_metric_value NUMERIC(20, 2) NOT NULL,                -- Size of the table, for validation purposes
+    permutation_metric_value NUMERIC(20, 2) NOT NULL,             -- Size of the table, for validation purposes
     created TIMESTAMP DEFAULT CURRENT_TIMESTAMP                  -- Timestamp column for creation time, defaults to current time
 );
 
 CREATE TABLE IF NOT EXISTS emm_raw_performance (
     id SERIAL PRIMARY KEY,
-    analysis_id SERIAL references emm_analysis(id) NOT NULL,          -- FK on schema
-    permutation_id SERIAL references emm_permutation(id) NOT NULL,    -- FK on schema
---    workload_id SERIAL references emm_workload(id) NULL             -- FK on schema
-    metric TEXT,                                                      -- Metric name (row_estimate, index_bytes, toast_bytes, table_bytes, total_bytes, metric_value)
-    notes TEXT,                                                       -- For convenience, we keep the name as well
-    value NUMERIC(20, 6),                                             -- The value of the metric
-    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP                       -- Timestamp column for creation time, defaults to current time
+    analysis_id SERIAL REFERENCES emm_analysis (id) NOT NULL,          -- FK on schema
+    permutation_id SERIAL REFERENCES emm_permutation (id) NOT NULL,    -- FK on schema
+    metric TEXT,                                                       -- Metric name (row_estimate, index_bytes, toast_bytes, table_bytes, total_bytes, metric_value)
+    notes TEXT,                                                        -- For convenience, we keep the name as well
+    value NUMERIC(20, 6),                                              -- The value of the metric
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP                        -- Timestamp column for creation time, defaults to current time
 );
 
 

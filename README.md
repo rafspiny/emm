@@ -11,11 +11,11 @@ At this stage, the tool can populate the tables, across the permutation schemas,
 * run workloads and analyze the (likely) performance improvements
 
 ## Recognition
-The name is a tribute to an old friend of mine. Emmanuel Granatiello. He passed away too early. He has been an extraordinary person. Caring, empathetic, curious, rooted in his community, an hacker. He has been and is greatly missed.
+The name is a tribute to an old friend of mine. Emmanuel Granatiello. He passed away too early. He has been an extraordinary person. Caring, empathetic, curious, rooted in his community, a hacker. He has been and is greatly missed.
 [Charly Batista](https://fosdem.org/2024/schedule/event/fosdem-2024-3601-reducing-costs-and-improving-performance-with-data-modeling-in-postgres/) for giving the talk.
 
 ## Notes
-The initial release encompasses PSQL only and it is written as I would be vibe coding. Whatever that means.
+The initial release encompasses PSQL only, and it is written as I would be vibe coding. Whatever that means.
 
 ## How EMM works
 The `docker-compose` file defines two services:
@@ -34,14 +34,14 @@ It also exposes a port to allow you to connect to it from any other interface (P
 
 You can also check what is in the DB by `docker exec -it emm-db psql -U emmuser emm`
 
-### CLI servie
+### CLI service
 
 You can then interact with the cli by running
 ```
 docker exec emm-cli poetry run python __main__.py <command> <arguments>
 ```
 
-You are free to use poetry and create a virtual environment to run the cli locally, or access the docker container trough your favourite tool.
+You are free to use poetry and create a virtual environment to run the cli locally, or access the docker container through your favourite tool.
 I prefer [lazydocker](https://github.com/jesseduffield/lazydocker), for instance.
 
 To get the list of available commands use `docker exec emm-cli poetry run python __main__.py`
@@ -55,13 +55,13 @@ Options:
   --help     Show this message and exit.
 
 Commands:
-  benchmark  Run benchmarks
-  clean      Remove all the schemas from the DB.
-  env        Print env variables
-  init       Init the schema based on the file sql/init/*.sql
-  ls         List all the schemas present in the DB.
-  perms      Generates permutations based on the table defined in your...
-  populate   Insert data from file sql/data/*.sql into the table
+benchmark     Run benchmarks
+  clean         Remove all the schemas from the DB.
+  init          Init the schema based on the file sql/init/*.sql
+  ls            List all the schemas present in the DB.
+  permutations  Init the schema based on the file sql/init/*.sql
+  populate      Insert data from file sql/data/*.sql into the table
+  report        Load the analysis for the specified schema and print them
 ```
 
 #### Commands
@@ -160,7 +160,7 @@ Schema populated
 It runs the benchmark on the original table and on all the permutations.
 It takes two parameters:
 * schema-name: Schema name to benchmark
-* benchmark-logic: 
+* benchmark-logic:
   * all
   * size
   * ro
